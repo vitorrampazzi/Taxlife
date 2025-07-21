@@ -14,8 +14,8 @@
 
     <!-- Botões de navegação -->
     <div class="d-flex justify-content-center mb-4">
-      <a href="register_user.html" class="btn btn-success me-2">Cadastrar Usuário</a>
-      <a href="register_driver.html" class="btn btn-warning">Cadastrar Taxista</a>
+      <a href="cadastroUsuario.html" class="btn btn-success me-2">Cadastrar Usuário</a>
+      <a href="cadastroTaxista.html" class="btn btn-warning">Cadastrar Taxista</a>
     </div>
 
     <!-- Lista de Taxistas -->
@@ -31,31 +31,6 @@
     </ul>
   </div>
 
-  <script>
-    // Simulação de busca de dados no backend
-    document.addEventListener('DOMContentLoaded', () => {
-      const taxistas = [
-        { id: 1, name: 'José Silva', car: 'Toyota Corolla' },
-        { id: 2, name: 'Maria Santos', car: 'Honda Civic' },
-      ];
-
-      const usuarios = [
-        { id: 1, name: 'João Oliveira', email: 'joao@mail.com' },
-        { id: 2, name: 'Ana Paula', email: 'ana@mail.com' },
-      ];
-
-      // Populando taxistas
-      const taxistasList = document.getElementById('taxistas-list');
-      taxistas.forEach(t => {
-        taxistasList.innerHTML += `<li class="list-group-item">🚕 ${t.name} - ${t.car}</li>`;
-      });
-
-      // Populando usuários
-      const usuariosList = document.getElementById('usuarios-list');
-      usuarios.forEach(u => {
-        usuariosList.innerHTML += `<li class="list-group-item">👤 ${u.name} - ${u.email}</li>`;
-      });
-    });
-  </script>
+<script src="./JS/script.js"></script>
 </body>
 </html>
