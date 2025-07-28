@@ -2,15 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-const bcrypt = require('bcrypt'); // Importa o bcrypt
+const bcrypt = require('bcrypt'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // Para parsear application/json
-// Para parsear application/x-www-form-urlencoded (usado pelos formulários HTML)
+app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
 
 
@@ -33,41 +32,27 @@ db.connect(err => {
 
 // --- ROTAS DE CADASTRO ---
 
-// Rota para cadastrar um novo usuário
 app.post('/api/usuarios', async (req, res) => {
-  // Os nomes vêm dos atributos 'name' do HTML: name, email, password
   const { name, email, password } = req.body;
 
-  // Validar se todos os campos necessários estão presentes
   if (!name || !email || !password) {
     return res.status(400).json({ erro: 'Todos os campos são obrigatórios: Nome, Email, Senha.' });
   }
 
   try {
-    // Gerar hash da senha
     const hashedPassword = await bcrypt.hash(password, 10); // 10 é o saltRounds
 
-    // Usar os nomes de coluna exatos da tabela 'users': Name, Email, Senha
-    // A TABELA 'users' E AS COLUNAS 'Name', 'Email', 'Senha' PRECISAM EXISTIR NO BANCO.
-    // VERIFIQUE A CAPITALIZAÇÃO EXATA NO SEU MySQL Workbench.
     const sql = 'INSERT INTO users (Name, Email, Senha) VALUES (?, ?, ?)';
     db.query(sql, [name, email, hashedPassword], (err, result) => {
       if (err) {
-        // ESTE É O ERRO DETALHADO QUE APARECERÁ NO SEU TERMINAL!
-        // COPIE E COLE ELE AQUI PARA EU TE AJUDAR A ANALISAR.
         console.error('Erro ao cadastrar usuário:', err);
 
-        // Erro de email duplicado (ER_DUP_ENTRY)
         if (err.code === 'ER_DUP_ENTRY') {
           return res.status(409).json({ erro: 'Este email já está cadastrado.' });
         }
-        // Se não for ER_DUP_ENTRY, é outro erro do BD
         return res.status(500).json({ erro: 'Erro interno ao cadastrar usuário.' });
       } else {
-        // Redireciona o usuário para a página inicial após o cadastro
-        // Ou pode enviar uma resposta JSON de sucesso
-        res.redirect('/index.html'); // Redireciona para a página principal
-        // res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
+        res.redirect('/index.html');
       }
     });
   } catch (error) {
@@ -76,9 +61,7 @@ app.post('/api/usuarios', async (req, res) => {
   }
 });
 
-// Rota para cadastrar um novo taxista
 app.post('/api/taxistas', async (req, res) => {
-  // Os nomes vêm dos atributos 'name' do HTML: name, email, password, car_model, car_license_plate
   const { name, email, password, car_model, car_license_plate } = req.body;
 
   // Validar se todos os campos necessários estão presentes
@@ -90,19 +73,11 @@ app.post('/api/taxistas', async (req, res) => {
     // Gerar hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Avaliado (Avaliado) não vem do formulário, pode ter um valor padrão no DB ou ser definido aqui
-    // Se o campo 'Avaliado' não for fornecido pelo frontend e tiver um DEFAULT FALSE no DB, não precisa passar.
-    // Se não tiver, pode definir como false aqui.
     const avaliado = false; // Valor padrão, pode ser removido se o DB tiver DEFAULT FALSE
 
-    // Usar os nomes de coluna exatos da tabela 'drivers': Name, email, password, car_model, car_license_plate, Avaliado
-    // A TABELA 'drivers' E AS COLUNAS 'Name', 'email', 'password', 'car_model', 'car_license_plate', 'Avaliado'
-    // PRECISAM EXISTIR NO BANCO. VERIFIQUE A CAPITALIZAÇÃO EXATA NO SEU MySQL Workbench.
     const sql = 'INSERT INTO drivers (Name, email, password, car_model, car_license_plate, Avaliado) VALUES (?, ?, ?, ?, ?, ?)';
     db.query(sql, [name, email, hashedPassword, car_model, car_license_plate, avaliado], (err, result) => {
       if (err) {
-        // ESTE É O ERRO DETALHADO QUE APARECERÁ NO SEU TERMINAL!
-        // COPIE E COLE ELE AQUI PARA EU TE AJUDAR A ANALISAR.
         console.error('Erro ao cadastrar taxista:', err);
 
         // Erro de email ou placa duplicada (ER_DUP_ENTRY)
@@ -131,7 +106,6 @@ app.post('/api/taxistas', async (req, res) => {
 });
 
 // --- ROTAS DE LOGIN ---
-// Atenção: O login também precisa comparar o hash da senha, não a senha em texto puro!
 
 app.post('/api/login-usuario', async (req, res) => {
   const { email, password } = req.body; // 'password' vem do HTML
@@ -243,9 +217,8 @@ app.get('/', (req, res) => {
 });
 
 // Servir arquivos estáticos (HTML, CSS, JS)
-app.use(express.static('public')); // Crie uma pasta 'public' e coloque seus arquivos HTML, CSS, JS lá.
+app.use(express.static('public'));
 
-// Rota padrão para servir o index.html quando acessar a raiz
 app.get('/index.html', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
