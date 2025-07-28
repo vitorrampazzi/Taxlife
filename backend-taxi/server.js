@@ -2,13 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const bcrypt = require('bcrypt'); // Importa o bcrypt
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Para parsear application/json
+// Para parsear application/x-www-form-urlencoded (usado pelos formulários HTML)
+app.use(express.urlencoded({ extended: true }));
+
 
 // Conexão com o banco de dados
 const db = mysql.createConnection({
@@ -27,80 +31,221 @@ db.connect(err => {
   }
 });
 
-// Rota para cadastrar um novo usuário
-app.post('/api/usuarios', (req, res) => {
-  const { nome, email, senha } = req.body;
+// --- ROTAS DE CADASTRO ---
 
-  const sql = 'INSERT INTO users (Name, Email, Senha) VALUES (?, ?, ?)';
-  db.query(sql, [nome, email, senha], (err, result) => {
+// Rota para cadastrar um novo usuário
+app.post('/api/usuarios', async (req, res) => {
+  // Os nomes vêm dos atributos 'name' do HTML: name, email, password
+  const { name, email, password } = req.body;
+
+  // Validar se todos os campos necessários estão presentes
+  if (!name || !email || !password) {
+    return res.status(400).json({ erro: 'Todos os campos são obrigatórios: Nome, Email, Senha.' });
+  }
+
+  try {
+    // Gerar hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 é o saltRounds
+
+    // Usar os nomes de coluna exatos da tabela 'users': Name, Email, Senha
+    const sql = 'INSERT INTO users (Name, Email, Senha) VALUES (?, ?, ?)';
+    db.query(sql, [name, email, hashedPassword], (err, result) => {
+      if (err) {
+        console.error('Erro ao cadastrar usuário:', err);
+        // Erro de email duplicado (ER_DUP_ENTRY)
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(409).json({ erro: 'Este email já está cadastrado.' });
+        }
+        return res.status(500).json({ erro: 'Erro interno ao cadastrar usuário.' });
+      } else {
+        // Redireciona o usuário para a página inicial após o cadastro
+        // Ou pode enviar uma resposta JSON de sucesso
+        res.redirect('/index.html'); // Redireciona para a página principal
+        // res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao gerar hash da senha:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor.' });
+  }
+});
+
+// Rota para cadastrar um novo taxista
+app.post('/api/taxistas', async (req, res) => {
+  // Os nomes vêm dos atributos 'name' do HTML: name, email, password, car_model, car_license_plate
+  const { name, email, password, car_model, car_license_plate } = req.body;
+
+  // Validar se todos os campos necessários estão presentes
+  if (!name || !email || !password || !car_model || !car_license_plate) {
+    return res.status(400).json({ erro: 'Todos os campos são obrigatórios: Nome, Email, Senha, Modelo do Carro, Placa do Carro.' });
+  }
+
+  try {
+    // Gerar hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Avaliado (Avaliado) não vem do formulário, pode ter um valor padrão no DB ou ser definido aqui
+    // Se o campo 'Avaliado' não for fornecido pelo frontend e tiver um DEFAULT FALSE no DB, não precisa passar.
+    // Se não tiver, pode definir como false aqui.
+    const avaliado = false; // Valor padrão, pode ser removido se o DB tiver DEFAULT FALSE
+
+    // Usar os nomes de coluna exatos da tabela 'drivers': Name, email, password, car_model, car_license_plate, Avaliado
+    const sql = 'INSERT INTO drivers (Name, email, password, car_model, car_license_plate, Avaliado) VALUES (?, ?, ?, ?, ?, ?)';
+    db.query(sql, [name, email, hashedPassword, car_model, car_license_plate, avaliado], (err, result) => {
+      if (err) {
+        console.error('Erro ao cadastrar taxista:', err);
+        // Erro de email ou placa duplicada (ER_DUP_ENTRY)
+        if (err.code === 'ER_DUP_ENTRY') {
+          let errorMessage = 'Já existe um cadastro com este email ou placa.';
+          // Você pode tentar ser mais específico aqui, se for importante diferenciar
+          if (err.sqlMessage && err.sqlMessage.includes('email')) {
+            errorMessage = 'Este email já está cadastrado como taxista.';
+          } else if (err.sqlMessage && err.sqlMessage.includes('car_license_plate')) {
+            errorMessage = 'Esta placa já está cadastrada.';
+          }
+          return res.status(409).json({ erro: errorMessage });
+        }
+        return res.status(500).json({ erro: 'Erro interno ao cadastrar taxista.' });
+      } else {
+        // Redireciona o usuário para a página inicial após o cadastro
+        res.redirect('/index.html');
+        // res.status(201).json({ mensagem: 'Taxista cadastrado com sucesso!' });
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao gerar hash da senha:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor.' });
+  }
+});
+
+// --- ROTAS DE LOGIN ---
+// Atenção: O login também precisa comparar o hash da senha, não a senha em texto puro!
+
+app.post('/api/login-usuario', async (req, res) => {
+  const { email, password } = req.body; // 'password' vem do HTML
+
+  if (!email || !password) {
+    return res.status(400).json({ erro: 'Email e senha são obrigatórios.' });
+  }
+
+  // Coluna 'Senha' na tabela 'users'
+  const sql = 'SELECT idusers, Name, Email, Senha FROM users WHERE Email = ?';
+  db.query(sql, [email], async (err, results) => {
     if (err) {
-      console.error('Erro ao cadastrar usuário:', err);
-      res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
-    } else {
-      res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
+      console.error('Erro ao fazer login de usuário:', err);
+      return res.status(500).json({ erro: 'Erro interno do servidor' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ erro: 'Email ou senha inválidos' });
+    }
+
+    const user = results[0];
+    try {
+      // Comparar a senha fornecida com o hash armazenado
+      const isMatch = await bcrypt.compare(password, user.Senha);
+
+      if (isMatch) {
+        // Remover a senha do objeto do usuário antes de enviar a resposta
+        const { Senha, ...userData } = user;
+        res.status(200).json({ mensagem: 'Login de usuário bem-sucedido', usuario: userData });
+      } else {
+        res.status(401).json({ erro: 'Email ou senha inválidos' });
+      }
+    } catch (error) {
+      console.error('Erro ao comparar senhas:', error);
+      res.status(500).json({ erro: 'Erro interno do servidor.' });
     }
   });
 });
 
-// Rota para cadastrar um novo taxista
-app.post('/api/taxistas', (req, res) => {
-  const { nome, email, senha, modelo, placa, avaliado } = req.body;
+app.post('/api/login-taxista', async (req, res) => {
+  const { email, password } = req.body; // 'password' vem do HTML
 
-  const sql = 'INSERT INTO drivers (Name, email, password, car_model, car_license_plate, Avaliado) VALUES (?, ?, ?, ?, ?, ?)';
-  db.query(sql, [nome, email, senha, modelo, placa, avaliado], (err, result) => {
+  if (!email || !password) {
+    return res.status(400).json({ erro: 'Email e senha são obrigatórios.' });
+  }
+
+  // Colunas 'email' e 'password' na tabela 'drivers'
+  const sql = 'SELECT Id_taxistas, Name, email, password, car_model, car_license_plate FROM drivers WHERE email = ?';
+  db.query(sql, [email], async (err, results) => {
     if (err) {
-      console.error('Erro ao cadastrar taxista:', err);
-      res.status(500).json({ erro: 'Erro ao cadastrar taxista' });
+      console.error('Erro ao fazer login de taxista:', err);
+      return res.status(500).json({ erro: 'Erro interno do servidor' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ erro: 'Email ou senha inválidos' });
+    }
+
+    const driver = results[0];
+    try {
+      // Comparar a senha fornecida com o hash armazenado
+      const isMatch = await bcrypt.compare(password, driver.password);
+
+      if (isMatch) {
+        // Remover a senha do objeto do taxista antes de enviar a resposta
+        const { password, ...driverData } = driver;
+        res.status(200).json({ mensagem: 'Login de taxista bem-sucedido', taxista: driverData });
+      } else {
+        res.status(401).json({ erro: 'Email ou senha inválidos' });
+      }
+    } catch (error) {
+      console.error('Erro ao comparar senhas:', error);
+      res.status(500).json({ erro: 'Erro interno do servidor.' });
+    }
+  });
+});
+
+// --- ROTAS DE LISTAGEM ---
+
+// Rota para obter todos os usuários
+app.get('/api/usuarios', (req, res) => {
+  const sql = 'SELECT idusers, Name, Email FROM users'; // Não retornar a senha
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Erro ao buscar usuários:', err);
+      res.status(500).json({ erro: 'Erro ao buscar usuários' });
     } else {
-      res.status(201).json({ mensagem: 'Taxista cadastrado com sucesso!' });
+      res.status(200).json(results);
+    }
+  });
+});
+
+// Rota para obter todos os taxistas
+app.get('/api/taxistas', (req, res) => {
+  const sql = 'SELECT Id_taxistas, Name, email, car_model, car_license_plate, Avaliado FROM drivers'; // Não retornar a senha
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Erro ao buscar taxistas:', err);
+      res.status(500).json({ erro: 'Erro ao buscar taxistas' });
+    } else {
+      res.status(200).json(results);
     }
   });
 });
 
 // Rota de teste
 app.get('/', (req, res) => {
-  res.send('Servidor está rodando! 🚕');
+  res.send('Servidor está rodando! ��');
 });
+
+// Servir arquivos estáticos (HTML, CSS, JS)
+app.use(express.static('public')); // Crie uma pasta 'public' e coloque seus arquivos HTML, CSS, JS lá.
+
+// Rota padrão para servir o index.html quando acessar a raiz
+app.get('/index.html', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+app.get('/cadastroUsuario.html', (req, res) => {
+  res.sendFile(__dirname + '/public/cadastroUsuario.html');
+});
+app.get('/cadastroTaxista.html', (req, res) => {
+  res.sendFile(__dirname + '/public/cadastroTaxista.html');
+});
+
 
 // Inicializa o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
-});
-
-
-app.post('/api/login-usuario', (req, res) => {
-  const { email, senha } = req.body;
-
-  const sql = 'SELECT * FROM users WHERE Email = ? AND Senha = ?';
-  db.query(sql, [email, senha], (err, results) => {
-    if (err) {
-      console.error('Erro ao fazer login de usuário:', err);
-      return res.status(500).json({ erro: 'Erro interno do servidor' });
-    }
-
-    if (results.length > 0) {
-      res.status(200).json({ mensagem: 'Login de usuário bem-sucedido', usuario: results[0] });
-    } else {
-      res.status(401).json({ erro: 'Email ou senha inválidos' });
-    }
-  });
-});
-
-
-app.post('/api/login-taxista', (req, res) => {
-  const { email, senha } = req.body;
-
-  const sql = 'SELECT * FROM drivers WHERE email = ? AND password = ?';
-  db.query(sql, [email, senha], (err, results) => {
-    if (err) {
-      console.error('Erro ao fazer login de taxista:', err);
-      return res.status(500).json({ erro: 'Erro interno do servidor' });
-    }
-
-    if (results.length > 0) {
-      res.status(200).json({ mensagem: 'Login de taxista bem-sucedido', taxista: results[0] });
-    } else {
-      res.status(401).json({ erro: 'Email ou senha inválidos' });
-    }
-  });
 });
