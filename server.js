@@ -48,14 +48,20 @@ app.post('/api/usuarios', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10); // 10 é o saltRounds
 
     // Usar os nomes de coluna exatos da tabela 'users': Name, Email, Senha
+    // A TABELA 'users' E AS COLUNAS 'Name', 'Email', 'Senha' PRECISAM EXISTIR NO BANCO.
+    // VERIFIQUE A CAPITALIZAÇÃO EXATA NO SEU MySQL Workbench.
     const sql = 'INSERT INTO users (Name, Email, Senha) VALUES (?, ?, ?)';
     db.query(sql, [name, email, hashedPassword], (err, result) => {
       if (err) {
+        // ESTE É O ERRO DETALHADO QUE APARECERÁ NO SEU TERMINAL!
+        // COPIE E COLE ELE AQUI PARA EU TE AJUDAR A ANALISAR.
         console.error('Erro ao cadastrar usuário:', err);
+
         // Erro de email duplicado (ER_DUP_ENTRY)
         if (err.code === 'ER_DUP_ENTRY') {
           return res.status(409).json({ erro: 'Este email já está cadastrado.' });
         }
+        // Se não for ER_DUP_ENTRY, é outro erro do BD
         return res.status(500).json({ erro: 'Erro interno ao cadastrar usuário.' });
       } else {
         // Redireciona o usuário para a página inicial após o cadastro
@@ -90,10 +96,15 @@ app.post('/api/taxistas', async (req, res) => {
     const avaliado = false; // Valor padrão, pode ser removido se o DB tiver DEFAULT FALSE
 
     // Usar os nomes de coluna exatos da tabela 'drivers': Name, email, password, car_model, car_license_plate, Avaliado
+    // A TABELA 'drivers' E AS COLUNAS 'Name', 'email', 'password', 'car_model', 'car_license_plate', 'Avaliado'
+    // PRECISAM EXISTIR NO BANCO. VERIFIQUE A CAPITALIZAÇÃO EXATA NO SEU MySQL Workbench.
     const sql = 'INSERT INTO drivers (Name, email, password, car_model, car_license_plate, Avaliado) VALUES (?, ?, ?, ?, ?, ?)';
     db.query(sql, [name, email, hashedPassword, car_model, car_license_plate, avaliado], (err, result) => {
       if (err) {
+        // ESTE É O ERRO DETALHADO QUE APARECERÁ NO SEU TERMINAL!
+        // COPIE E COLE ELE AQUI PARA EU TE AJUDAR A ANALISAR.
         console.error('Erro ao cadastrar taxista:', err);
+
         // Erro de email ou placa duplicada (ER_DUP_ENTRY)
         if (err.code === 'ER_DUP_ENTRY') {
           let errorMessage = 'Já existe um cadastro com este email ou placa.';
@@ -105,6 +116,7 @@ app.post('/api/taxistas', async (req, res) => {
           }
           return res.status(409).json({ erro: errorMessage });
         }
+        // Se não for ER_DUP_ENTRY, é outro erro do BD
         return res.status(500).json({ erro: 'Erro interno ao cadastrar taxista.' });
       } else {
         // Redireciona o usuário para a página inicial após o cadastro
