@@ -1,7 +1,7 @@
 // routes/cadastro.js
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const db = require('../backend-taxi/db');
 
 // Rota para cadastro de usuário
 router.post('/usuario', (req, res) => {
