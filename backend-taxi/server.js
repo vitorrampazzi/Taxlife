@@ -10,38 +10,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Rota para cadastrar um novo usuário
-app.post('/api/usuarios', (req, res) => {
-  const { nome, email, senha } = req.body;
-
-  const sql = 'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)';
-  db.query(sql, [nome, email, senha], (err, result) => {
-    if (err) {
-      console.error('Erro ao cadastrar usuário:', err);
-      res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
-    } else {
-      res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
-    }
-  });
-});
-
-
-// Rota para cadastrar um novo taxista
-app.post('/api/taxistas', (req, res) => {
-  const { nome, email, cnh, senha } = req.body;
-
-  const sql = 'INSERT INTO taxistas (nome, email, cnh, senha) VALUES (?, ?, ?, ?)';
-  db.query(sql, [nome, email, cnh, senha], (err, result) => {
-    if (err) {
-      console.error('Erro ao cadastrar taxista:', err);
-      res.status(500).json({ erro: 'Erro ao cadastrar taxista' });
-    } else {
-      res.status(201).json({ mensagem: 'Taxista cadastrado com sucesso!' });
-    }
-  });
-});
-
-
 // Conexão com o banco de dados
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -59,11 +27,42 @@ db.connect(err => {
   }
 });
 
+// Rota para cadastrar um novo usuário
+app.post('/api/usuarios', (req, res) => {
+  const { nome, email, senha } = req.body;
+
+  const sql = 'INSERT INTO users (Name, Email, Senha) VALUES (?, ?, ?)';
+  db.query(sql, [nome, email, senha], (err, result) => {
+    if (err) {
+      console.error('Erro ao cadastrar usuário:', err);
+      res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+    } else {
+      res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
+    }
+  });
+});
+
+// Rota para cadastrar um novo taxista
+app.post('/api/taxistas', (req, res) => {
+  const { nome, email, senha, modelo, placa, avaliado } = req.body;
+
+  const sql = 'INSERT INTO drivers (Name, email, password, car_model, car_license_plate, Avaliado) VALUES (?, ?, ?, ?, ?, ?)';
+  db.query(sql, [nome, email, senha, modelo, placa, avaliado], (err, result) => {
+    if (err) {
+      console.error('Erro ao cadastrar taxista:', err);
+      res.status(500).json({ erro: 'Erro ao cadastrar taxista' });
+    } else {
+      res.status(201).json({ mensagem: 'Taxista cadastrado com sucesso!' });
+    }
+  });
+});
+
 // Rota de teste
 app.get('/', (req, res) => {
   res.send('Servidor está rodando! 🚕');
 });
 
+// Inicializa o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
