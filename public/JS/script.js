@@ -1,4 +1,3 @@
-// script.js
 document.addEventListener('DOMContentLoaded', async () => {
     const taxistasList = document.getElementById('taxistas-list');
     const usuariosList = document.getElementById('usuarios-list');

@@ -1,0 +1,128 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa;
+  color: #343a40;
+  line-height: 1.6;
+}
+
+h1, h2 {
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.container {
+  max-width: 800px;
+}
+
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn {
+  padding: 0.625rem 1.25rem;
+}
+
+.hero-section {
+    background-image: url(../images/lexi-anderson-G8wPrJyNqWQ-unsplash.jpg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh; /* Alterado para cobrir a altura total da viewport */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    padding: 20px;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.hero-content {
+    z-index: 2;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    margin: auto auto 0 auto;
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: auto;
+}
+
+.hero-header {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0 15px;
+    margin-bottom: 20px;
+}
+
+.hero-brand {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-decoration: none;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.hero-brand:hover {
+    color: #ffd700;
+}
+
+.hero-nav {
+    display: flex;
+    gap: 20px;
+}
+
+.hero-nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 5px 0;
+    transition: color 0.3s ease;
+}
+
+.hero-nav-link:hover {
+    color: #ffd700;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 100vh; /* Também alterado para 100vh em telas menores */
+        padding: 15px;
+    }
+    .hero-content h2 {
+        font-size: 2rem;
+    }
+    .hero-content p {
+        font-size: 0.9rem;
+    }
+    .hero-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .hero-nav {
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    .hero-nav-link {
+        font-size: 0.9rem;
+    }
+    .hero-brand {
+        font-size: 1.5rem;
+    }
+}
