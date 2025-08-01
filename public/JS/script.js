@@ -3,16 +3,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const usuariosList = document.getElementById('usuarios-list');
 
     try {
-        // Busca os taxistas do backend
         const taxistasResponse = await fetch('/api/taxistas');
         if (!taxistasResponse.ok) {
             throw new Error(`HTTP error! status: ${taxistasResponse.status}`);
         }
         const taxistas = await taxistasResponse.json();
 
-        // Popula a lista de taxistas
         if (taxistas.length > 0) {
-            taxistasList.innerHTML = ''; // Limpa a simulação anterior
+            taxistasList.innerHTML = ''; 
             taxistas.forEach(t => {
                 taxistasList.innerHTML += `<li class="list-group-item">🚕 ${t.Name} - ${t.car_model} (${t.car_license_plate})</li>`;
             });
@@ -21,16 +19,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
 
-        // Busca os usuários do backend
         const usuariosResponse = await fetch('/api/usuarios');
         if (!usuariosResponse.ok) {
             throw new Error(`HTTP error! status: ${usuariosResponse.status}`);
         }
         const usuarios = await usuariosResponse.json();
-
-        // Popula a lista de usuários
+        
         if (usuarios.length > 0) {
-            usuariosList.innerHTML = ''; // Limpa a simulação anterior
+            usuariosList.innerHTML = ''; 
             usuarios.forEach(u => {
                 usuariosList.innerHTML += `<li class="list-group-item">👤 ${u.Name} - ${u.Email}</li>`;
             });

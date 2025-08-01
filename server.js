@@ -40,7 +40,7 @@ app.post('/api/usuarios', async (req, res) => {
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 é o saltRounds
+    const hashedPassword = await bcrypt.hash(password, 10); 
 
     const sql = 'INSERT INTO users (Name, Email, Senha) VALUES (?, ?, ?)';
     db.query(sql, [name, email, hashedPassword], (err, result) => {
@@ -64,26 +64,24 @@ app.post('/api/usuarios', async (req, res) => {
 app.post('/api/taxistas', async (req, res) => {
   const { name, email, password, car_model, car_license_plate } = req.body;
 
-  // Validar se todos os campos necessários estão presentes
+  
   if (!name || !email || !password || !car_model || !car_license_plate) {
     return res.status(400).json({ erro: 'Todos os campos são obrigatórios: Nome, Email, Senha, Modelo do Carro, Placa do Carro.' });
   }
 
   try {
-    // Gerar hash da senha
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const avaliado = false; // Valor padrão, pode ser removido se o DB tiver DEFAULT FALSE
+    const avaliado = false;
 
     const sql = 'INSERT INTO drivers (Name, email, password, car_model, car_license_plate, Avaliado) VALUES (?, ?, ?, ?, ?, ?)';
     db.query(sql, [name, email, hashedPassword, car_model, car_license_plate, avaliado], (err, result) => {
       if (err) {
         console.error('Erro ao cadastrar taxista:', err);
 
-        // Erro de email ou placa duplicada (ER_DUP_ENTRY)
         if (err.code === 'ER_DUP_ENTRY') {
           let errorMessage = 'Já existe um cadastro com este email ou placa.';
-          // Você pode tentar ser mais específico aqui, se for importante diferenciar
           if (err.sqlMessage && err.sqlMessage.includes('email')) {
             errorMessage = 'Este email já está cadastrado como taxista.';
           } else if (err.sqlMessage && err.sqlMessage.includes('car_license_plate')) {
@@ -91,12 +89,10 @@ app.post('/api/taxistas', async (req, res) => {
           }
           return res.status(409).json({ erro: errorMessage });
         }
-        // Se não for ER_DUP_ENTRY, é outro erro do BD
         return res.status(500).json({ erro: 'Erro interno ao cadastrar taxista.' });
       } else {
-        // Redireciona o usuário para a página inicial após o cadastro
+
         res.redirect('/index.html');
-        // res.status(201).json({ mensagem: 'Taxista cadastrado com sucesso!' });
       }
     });
   } catch (error) {
@@ -105,16 +101,13 @@ app.post('/api/taxistas', async (req, res) => {
   }
 });
 
-// --- ROTAS DE LOGIN ---
 
 app.post('/api/login-usuario', async (req, res) => {
-  const { email, password } = req.body; // 'password' vem do HTML
+  const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ erro: 'Email e senha são obrigatórios.' });
   }
-
-  // Coluna 'Senha' na tabela 'users'
   const sql = 'SELECT idusers, Name, Email, Senha FROM users WHERE Email = ?';
   db.query(sql, [email], async (err, results) => {
     if (err) {
@@ -128,11 +121,9 @@ app.post('/api/login-usuario', async (req, res) => {
 
     const user = results[0];
     try {
-      // Comparar a senha fornecida com o hash armazenado
       const isMatch = await bcrypt.compare(password, user.Senha);
 
       if (isMatch) {
-        // Remover a senha do objeto do usuário antes de enviar a resposta
         const { Senha, ...userData } = user;
         res.status(200).json({ mensagem: 'Login de usuário bem-sucedido', usuario: userData });
       } else {
@@ -146,13 +137,12 @@ app.post('/api/login-usuario', async (req, res) => {
 });
 
 app.post('/api/login-taxista', async (req, res) => {
-  const { email, password } = req.body; // 'password' vem do HTML
+  const { email, password } = req.body; 
 
   if (!email || !password) {
     return res.status(400).json({ erro: 'Email e senha são obrigatórios.' });
   }
 
-  // Colunas 'email' e 'password' na tabela 'drivers'
   const sql = 'SELECT Id_taxistas, Name, email, password, car_model, car_license_plate FROM drivers WHERE email = ?';
   db.query(sql, [email], async (err, results) => {
     if (err) {
@@ -166,11 +156,9 @@ app.post('/api/login-taxista', async (req, res) => {
 
     const driver = results[0];
     try {
-      // Comparar a senha fornecida com o hash armazenado
       const isMatch = await bcrypt.compare(password, driver.password);
 
       if (isMatch) {
-        // Remover a senha do objeto do taxista antes de enviar a resposta
         const { password, ...driverData } = driver;
         res.status(200).json({ mensagem: 'Login de taxista bem-sucedido', taxista: driverData });
       } else {
@@ -183,9 +171,6 @@ app.post('/api/login-taxista', async (req, res) => {
   });
 });
 
-// --- ROTAS DE LISTAGEM ---
-
-// Rota para obter todos os usuários
 app.get('/api/usuarios', (req, res) => {
   const sql = 'SELECT idusers, Name, Email FROM users'; // Não retornar a senha
   db.query(sql, (err, results) => {
@@ -198,7 +183,6 @@ app.get('/api/usuarios', (req, res) => {
   });
 });
 
-// Rota para obter todos os taxistas
 app.get('/api/taxistas', (req, res) => {
   const sql = 'SELECT Id_taxistas, Name, email, car_model, car_license_plate, Avaliado FROM drivers'; // Não retornar a senha
   db.query(sql, (err, results) => {
@@ -211,12 +195,10 @@ app.get('/api/taxistas', (req, res) => {
   });
 });
 
-// Rota de teste
 app.get('/', (req, res) => {
   res.send('Servidor está rodando! ��');
 });
 
-// Servir arquivos estáticos (HTML, CSS, JS)
 app.use(express.static('public'));
 
 app.get('/index.html', (req, res) => {
