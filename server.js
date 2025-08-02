@@ -7,7 +7,6 @@ const bcrypt = require('bcrypt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
@@ -31,7 +30,6 @@ db.connect(err => {
 });
 
 // --- ROTAS DE CADASTRO ---
-
 app.post('/api/usuarios', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -184,7 +182,7 @@ app.get('/api/usuarios', (req, res) => {
 });
 
 app.get('/api/taxistas', (req, res) => {
-  const sql = 'SELECT Id_taxistas, Name, email, car_model, car_license_plate, Avaliado FROM drivers'; // Não retornar a senha
+  const sql = 'SELECT Id_taxistas, Name, email, car_model, car_license_plate, Avaliado FROM drivers';
   db.query(sql, (err, results) => {
     if (err) {
       console.error('Erro ao buscar taxistas:', err);
@@ -212,7 +210,6 @@ app.get('/cadastroTaxista.html', (req, res) => {
 });
 
 
-// Inicializa o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
