@@ -1,42 +1,117 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const taxistasList = document.getElementById('taxistas-list');
-    const usuariosList = document.getElementById('usuarios-list');
+document.addEventListener('DOMContentLoaded', () => {
+    const usuariosListElement = document.getElementById('usuarios-list');
+    if (usuariosListElement) {
+        fetchUsuarios();
+        usuariosListElement.addEventListener('click', (event) => {
+            if (event.target.classList.contains('delete-btn')) {
+                const id = event.target.dataset.id;
+                const type = event.target.dataset.type;
+                if (confirm(`Tem certeza que deseja excluir este ${type}?`)) {
+                    deleteItem(id, type);
+                }
+            }
+        });
+    }
 
-    try {
-        const taxistasResponse = await fetch('/api/taxistas');
-        if (!taxistasResponse.ok) {
-            throw new Error(`HTTP error! status: ${taxistasResponse.status}`);
-        }
-        const taxistas = await taxistasResponse.json();
-
-        if (taxistas.length > 0) {
-            taxistasList.innerHTML = ''; 
-            taxistas.forEach(t => {
-                taxistasList.innerHTML += `<li class="list-group-item">🚕 ${t.Name} - ${t.car_model} (${t.car_license_plate})</li>`;
-            });
-        } else {
-            taxistasList.innerHTML = `<li class="list-group-item text-muted">Nenhum taxista cadastrado ainda.</li>`;
-        }
-
-
-        const usuariosResponse = await fetch('/api/usuarios');
-        if (!usuariosResponse.ok) {
-            throw new Error(`HTTP error! status: ${usuariosResponse.status}`);
-        }
-        const usuarios = await usuariosResponse.json();
-        
-        if (usuarios.length > 0) {
-            usuariosList.innerHTML = ''; 
-            usuarios.forEach(u => {
-                usuariosList.innerHTML += `<li class="list-group-item">👤 ${u.Name} - ${u.Email}</li>`;
-            });
-        } else {
-            usuariosList.innerHTML = `<li class="list-group-item text-muted">Nenhum usuário cadastrado ainda.</li>`;
-        }
-
-    } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        taxistasList.innerHTML = `<li class="list-group-item text-danger">Erro ao carregar taxistas. Tente novamente mais tarde.</li>`;
-        usuariosList.innerHTML = `<li class="list-group-item text-danger">Erro ao carregar usuários. Tente novamente mais tarde.</li>`;
+    const taxistasListElement = document.getElementById('taxistas-list');
+    if (taxistasListElement) {
+        fetchTaxistas();
+        taxistasListElement.addEventListener('click', (event) => {
+            if (event.target.classList.contains('delete-btn')) {
+                const id = event.target.dataset.id;
+                const type = event.target.dataset.type;
+                if (confirm(`Tem certeza que deseja excluir este ${type}?`)) {
+                    deleteItem(id, type);
+                }
+            }
+        });
     }
 });
+
+async function fetchUsuarios() {
+    try {
+        // CORRIGIDO: Adicionado '/api' ao URL e ajuste da porta para 3000
+        const response = await fetch('http://localhost:3000/api/usuarios');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const usuarios = await response.json();
+        const usuariosList = document.getElementById('usuarios-list');
+        usuariosList.innerHTML = '';
+        if (usuarios.length === 0) {
+            usuariosList.innerHTML = '<li class="list-group-item">Nenhum usuário cadastrado.</li>';
+            return;
+        }
+        usuarios.forEach(usuario => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+                <span>${usuario.Name}</span> <!-- Usando 'Name' conforme a coluna do seu banco de dados -->
+                <button class="btn btn-danger btn-sm delete-btn" data-id="${usuario.idusers}" data-type="usuario">Excluir</button> <!-- Usando 'idusers' conforme a coluna do seu banco de dados -->
+            `;
+            usuariosList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+        const usuariosList = document.getElementById('usuarios-list');
+        if (usuariosList) {
+            usuariosList.innerHTML = '<li class="list-group-item text-danger">Erro ao carregar usuários.</li>';
+        }
+    }
+}
+
+async function fetchTaxistas() {
+    try {
+        // CORRIGIDO: Adicionado '/api' ao URL e ajuste da porta para 3000
+        const response = await fetch('http://localhost:3000/api/taxistas');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const taxistas = await response.json();
+        const taxistasList = document.getElementById('taxistas-list');
+        taxistasList.innerHTML = '';
+        if (taxistas.length === 0) {
+            taxistasList.innerHTML = '<li class="list-group-item">Nenhum taxista cadastrado.</li>';
+            return;
+        }
+        taxistas.forEach(taxista => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+                <span>${taxista.Name}</span> <!-- Usando 'Name' conforme a coluna do seu banco de dados -->
+                <button class="btn btn-danger btn-sm delete-btn" data-id="${taxista.Id_taxistas}" data-type="taxista">Excluir</button> <!-- Usando 'Id_taxistas' conforme a coluna do seu banco de dados -->
+            `;
+            taxistasList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Erro ao buscar taxistas:', error);
+        const taxistasList = document.getElementById('taxistas-list');
+        if (taxistasList) {
+            taxistasList.innerHTML = '<li class="list-group-item text-danger">Erro ao carregar taxistas.</li>';
+        }
+    }
+}
+
+async function deleteItem(id, type) {
+    try {
+        // CORRIGIDO: Adicionado '/api' ao URL
+        const response = await fetch(`http://localhost:3000/api/${type}s/${id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.erro || 'Erro desconhecido'}`);
+        }
+
+        alert(`${type === 'usuario' ? 'Usuário' : 'Taxista'} excluído com sucesso!`);
+        if (type === 'usuario') {
+            fetchUsuarios();
+        } else {
+            fetchTaxistas();
+        }
+    } catch (error) {
+        console.error(`Erro ao excluir ${type}:`, error);
+        alert(`Erro ao excluir ${type === 'usuario' ? 'usuário' : 'taxista'}: ${error.message}`);
+    }
+}
