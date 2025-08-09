@@ -211,7 +211,7 @@ app.get('/api/taxistas', (req, res) => {
 
 app.delete('/api/usuarios/:id', (req, res) => {
   const userId = req.params.id;
-  const sql = 'DELETE FROM tb_usuarios WHERE idusers = ?'; // Nome da tabela: tb_usuarios
+  const sql = 'DELETE FROM tb_usuarios WHERE idusers = ?';// Nome da tabela: tb_usuarios
   db.query(sql, [userId], (err, result) => {
     if (err) {
       console.error('Erro ao excluir usuário:', err);
