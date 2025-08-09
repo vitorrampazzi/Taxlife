@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchUsuarios() {
     try {
-        // CORRIGIDO: Adicionado '/api' ao URL e ajuste da porta para 3000
         const response = await fetch('http://localhost:3000/api/usuarios');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -46,8 +45,8 @@ async function fetchUsuarios() {
             const li = document.createElement('li');
             li.className = 'list-group-item';
             li.innerHTML = `
-                <span>${usuario.Name}</span> <!-- Usando 'Name' conforme a coluna do seu banco de dados -->
-                <button class="btn btn-danger btn-sm delete-btn" data-id="${usuario.idusers}" data-type="usuario">Excluir</button> <!-- Usando 'idusers' conforme a coluna do seu banco de dados -->
+                <span>${usuario.Name}</span> 
+                <button class="btn btn-danger btn-sm delete-btn" data-id="${usuario.idusers}" data-type="usuario">Excluir</button> 
             `;
             usuariosList.appendChild(li);
         });
@@ -62,7 +61,6 @@ async function fetchUsuarios() {
 
 async function fetchTaxistas() {
     try {
-        // CORRIGIDO: Adicionado '/api' ao URL e ajuste da porta para 3000
         const response = await fetch('http://localhost:3000/api/taxistas');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -78,8 +76,8 @@ async function fetchTaxistas() {
             const li = document.createElement('li');
             li.className = 'list-group-item';
             li.innerHTML = `
-                <span>${taxista.Name}</span> <!-- Usando 'Name' conforme a coluna do seu banco de dados -->
-                <button class="btn btn-danger btn-sm delete-btn" data-id="${taxista.Id_taxistas}" data-type="taxista">Excluir</button> <!-- Usando 'Id_taxistas' conforme a coluna do seu banco de dados -->
+                <span>${taxista.Name}</span> 
+                <button class="btn btn-danger btn-sm delete-btn" data-id="${taxista.Id_taxistas}" data-type="taxista">Excluir</button> 
             `;
             taxistasList.appendChild(li);
         });
@@ -94,7 +92,6 @@ async function fetchTaxistas() {
 
 async function deleteItem(id, type) {
     try {
-        // CORRIGIDO: Adicionado '/api' ao URL
         const response = await fetch(`http://localhost:3000/api/${type}s/${id}`, {
             method: 'DELETE',
         });
